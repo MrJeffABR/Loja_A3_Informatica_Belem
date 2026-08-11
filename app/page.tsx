@@ -234,29 +234,90 @@ export default function Home() {
   const modalCloseRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const nodes = document.querySelectorAll<HTMLElement>("[data-reveal]");
-    if (!("IntersectionObserver" in window)) {
-      nodes.forEach((node) => node.classList.add("is-visible"));
+    const nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const pending = new Set(nodes);
+    let observer: IntersectionObserver | null = null;
+    let prepareFrame = 0;
+    let activationFrame = 0;
+    let checkFrame = 0;
+    let safetyTimer = 0;
+
+    const reveal = (node: HTMLElement) => {
+      if (!pending.has(node)) return;
+      node.classList.add("is-visible");
+      pending.delete(node);
+      observer?.unobserve(node);
+    };
+
+    const checkViewport = () => {
+      checkFrame = 0;
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const upperLimit = viewportHeight * 0.94;
+      const lowerLimit = viewportHeight * 0.04;
+
+      pending.forEach((node) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.top <= upperLimit && rect.bottom >= lowerLimit) reveal(node);
+      });
+    };
+
+    const scheduleCheck = () => {
+      if (!checkFrame) checkFrame = window.requestAnimationFrame(checkViewport);
+    };
+
+    if (reduceMotion.matches) {
+      nodes.forEach(reveal);
       return;
     }
 
-    const isMobile = window.matchMedia("(max-width: 620px)").matches;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        threshold: isMobile ? 0.035 : 0.12,
-        rootMargin: isMobile ? "0px 0px -2% 0px" : "0px 0px -6% 0px",
-      },
-    );
-    nodes.forEach((node) => observer.observe(node));
-    return () => observer.disconnect();
+    // A double frame gives Safari/Chrome mobile time to settle the visual viewport
+    // before the first intersection calculation. The scroll fallback also covers
+    // WebViews that delay or skip the initial IntersectionObserver callback.
+    nodes.forEach((node) => node.classList.remove("is-visible"));
+    document.documentElement.classList.add("reveal-enabled");
+    void document.documentElement.offsetHeight;
+
+    window.addEventListener("scroll", scheduleCheck, { passive: true });
+    window.addEventListener("resize", scheduleCheck, { passive: true });
+    window.addEventListener("orientationchange", scheduleCheck, { passive: true });
+    window.addEventListener("pageshow", scheduleCheck, { passive: true });
+    document.addEventListener("visibilitychange", scheduleCheck, { passive: true });
+    window.visualViewport?.addEventListener("resize", scheduleCheck, { passive: true });
+
+    prepareFrame = window.requestAnimationFrame(() => {
+      activationFrame = window.requestAnimationFrame(() => {
+        if ("IntersectionObserver" in window) {
+          observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) reveal(entry.target as HTMLElement);
+              });
+            },
+            { threshold: [0, 0.01, 0.12], rootMargin: "0px 0px -5% 0px" },
+          );
+          pending.forEach((node) => observer?.observe(node));
+        }
+        scheduleCheck();
+      });
+    });
+
+    safetyTimer = window.setTimeout(scheduleCheck, 900);
+
+    return () => {
+      observer?.disconnect();
+      window.cancelAnimationFrame(prepareFrame);
+      window.cancelAnimationFrame(activationFrame);
+      window.cancelAnimationFrame(checkFrame);
+      window.clearTimeout(safetyTimer);
+      window.removeEventListener("scroll", scheduleCheck);
+      window.removeEventListener("resize", scheduleCheck);
+      window.removeEventListener("orientationchange", scheduleCheck);
+      window.removeEventListener("pageshow", scheduleCheck);
+      document.removeEventListener("visibilitychange", scheduleCheck);
+      window.visualViewport?.removeEventListener("resize", scheduleCheck);
+      document.documentElement.classList.remove("reveal-enabled");
+    };
   }, []);
 
   useEffect(() => {
@@ -697,15 +758,3 @@ export default function Home() {
                 <select value={serviceMode} onChange={(e) => setServiceMode(e.target.value)} required>
                   <option value="">Selecione uma opção</option>
                   <option>Levar pessoalmente à assistência</option>
-                  <option>Delivery: buscar e devolver em minha residência</option>
-                </select>
-              </label>
-              <button className="button button--orange button--full" type="submit"><MessageCircle /> Continuar no WhatsApp</button>
-              <p className="diagnostic-form__note">O WhatsApp será aberto somente após o preenchimento.</p>
-            </form>
-          </section>
-        </div>
-      )}
-    </main>
-  );
-}
