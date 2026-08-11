@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "@fontsource/manrope/400.css";
 import "@fontsource/manrope/500.css";
 import "@fontsource/manrope/600.css";
@@ -6,6 +6,14 @@ import "@fontsource/manrope/700.css";
 import "./globals.css";
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://a3-informatica.mrjeffb.chatgpt.site").replace(/\/$/, "");
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
