@@ -30,7 +30,7 @@ import {
   Zap,
 } from "lucide-react";
 
-const WHATSAPP = "https://wa.me/5591980237643";
+const WHATSAPP = "https://wa.me/5591980137643";
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://a3-informatica.mrjeffb.chatgpt.site").replace(/\/$/, "");
 const FLEXMIND_WHATSAPP = `https://wa.me/5584986005544?text=${encodeURIComponent("Olá, gostaria de saber mais sobre os serviços da FlexMind! Vim através do site 'A3 Informática'")}`;
 
@@ -129,7 +129,7 @@ const structuredData = {
       image: `${SITE_URL}/images/a3-logo-oficial.png`,
       logo: `${SITE_URL}/images/a3-logo-oficial.png`,
       description: "Assistência técnica multimarcas e acessórios em Belém para celulares, tablets, notebooks, desktops, TV Box e caixas Bluetooth, com serviço de coleta e devolução agendada.",
-      telephone: "+55 91 98023-7643",
+      telephone: "+55 91 98013-7643",
       address: { "@type": "PostalAddress", streetAddress: "Travessa Lomas Valentinas, 93A", addressLocality: "Belém", addressRegion: "PA", postalCode: "66083-390", addressCountry: "BR" },
       areaServed: { "@type": "City", name: "Belém" },
       sameAs: ["https://instagram.com/a3_informatica"],
@@ -231,9 +231,16 @@ export default function Home() {
   const [diagnosticOpen, setDiagnosticOpen] = useState(false);
   const [diagnosticOrigin, setDiagnosticOrigin] = useState("Site");
   const heroRef = useRef<HTMLElement>(null);
+  const modalCloseRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const nodes = document.querySelectorAll<HTMLElement>("[data-reveal]");
+    if (!("IntersectionObserver" in window)) {
+      nodes.forEach((node) => node.classList.add("is-visible"));
+      return;
+    }
+
+    const isMobile = window.matchMedia("(max-width: 620px)").matches;
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -243,7 +250,10 @@ export default function Home() {
           }
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+      {
+        threshold: isMobile ? 0.035 : 0.12,
+        rootMargin: isMobile ? "0px 0px -2% 0px" : "0px 0px -6% 0px",
+      },
     );
     nodes.forEach((node) => observer.observe(node));
     return () => observer.disconnect();
@@ -256,7 +266,9 @@ export default function Home() {
     };
     document.body.classList.add("modal-open");
     window.addEventListener("keydown", closeOnEscape);
+    const focusFrame = window.requestAnimationFrame(() => modalCloseRef.current?.focus());
     return () => {
+      window.cancelAnimationFrame(focusFrame);
       document.body.classList.remove("modal-open");
       window.removeEventListener("keydown", closeOnEscape);
     };
@@ -620,7 +632,7 @@ export default function Home() {
           <h2>Seu aparelho merece uma avaliação profissional.</h2>
           <p>Fale diretamente com a A3 Informática e dê o primeiro passo para resolver o problema.</p>
           <div className="contact__actions">
-            <button className="button button--orange" onClick={() => openDiagnostic("Seção de contato")}><MessageCircle /> (91) 98023-7643</button>
+            <button className="button button--orange" onClick={() => openDiagnostic("Seção de contato")}><MessageCircle /> (91) 98013-7643</button>
             <a className="button button--glass" href="https://www.google.com/maps/search/?api=1&query=Travessa+Lomas+Valentinas+93A+Sacramenta+Bel%C3%A9m+PA" target="_blank" rel="noreferrer"><MapPin /> Ver localização</a>
           </div>
           <address>Trav. Lomas Valentinas, 93A — Sacramenta, Belém–PA · CEP 66083-390</address>
@@ -653,7 +665,7 @@ export default function Home() {
           if (event.target === event.currentTarget) setDiagnosticOpen(false);
         }}>
           <section className="diagnostic-modal__panel" role="dialog" aria-modal="true" aria-labelledby="diagnostic-modal-title">
-            <button className="diagnostic-modal__close" onClick={() => setDiagnosticOpen(false)} aria-label="Fechar diagnóstico"><X /></button>
+            <button ref={modalCloseRef} className="diagnostic-modal__close" onClick={() => setDiagnosticOpen(false)} aria-label="Fechar diagnóstico"><X /></button>
             <div className="diagnostic-modal__intro">
               <span className="eyebrow"><Zap size={15} /> Antes do WhatsApp</span>
               <h2 id="diagnostic-modal-title">Conte o que aconteceu.</h2>
@@ -662,7 +674,7 @@ export default function Home() {
             <form className="diagnostic-form diagnostic-form--modal" onSubmit={sendDiagnostic}>
               <label>
                 Qual é o aparelho?
-                <select value={device} onChange={(e) => setDevice(e.target.value)} required autoFocus>
+                <select value={device} onChange={(e) => setDevice(e.target.value)} required>
                   <option value="">Selecione uma opção</option>
                   {services.map((service) => <option key={service.title}>{service.title}</option>)}
                 </select>

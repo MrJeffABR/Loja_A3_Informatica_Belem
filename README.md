@@ -52,6 +52,6 @@ npm start
 
 ## Contatos configurados
 
-- A3 Informática: WhatsApp `(91) 98023-7643`
+- A3 Informática: WhatsApp `(91) 98013-7643`
 - FlexMind: WhatsApp `(84) 98600-5544`
 - Site da FlexMind: `https://www.flexmind.tec.br`
