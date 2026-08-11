@@ -284,6 +284,7 @@ export default function Home() {
     window.addEventListener("pageshow", scheduleCheck, { passive: true });
     document.addEventListener("visibilitychange", scheduleCheck, { passive: true });
     window.visualViewport?.addEventListener("resize", scheduleCheck, { passive: true });
+    window.visualViewport?.addEventListener("scroll", scheduleCheck, { passive: true });
 
     prepareFrame = window.requestAnimationFrame(() => {
       activationFrame = window.requestAnimationFrame(() => {
@@ -316,6 +317,7 @@ export default function Home() {
       window.removeEventListener("pageshow", scheduleCheck);
       document.removeEventListener("visibilitychange", scheduleCheck);
       window.visualViewport?.removeEventListener("resize", scheduleCheck);
+      window.visualViewport?.removeEventListener("scroll", scheduleCheck);
       document.documentElement.classList.remove("reveal-enabled");
     };
   }, []);
@@ -758,3 +760,15 @@ export default function Home() {
                 <select value={serviceMode} onChange={(e) => setServiceMode(e.target.value)} required>
                   <option value="">Selecione uma opção</option>
                   <option>Levar pessoalmente à assistência</option>
+                  <option>Delivery: buscar e devolver em minha residência</option>
+                </select>
+              </label>
+              <button className="button button--orange button--full" type="submit"><MessageCircle /> Continuar no WhatsApp</button>
+              <p className="diagnostic-form__note">O WhatsApp será aberto somente após o preenchimento.</p>
+            </form>
+          </section>
+        </div>
+      )}
+    </main>
+  );
+}
